@@ -20,16 +20,16 @@ docker-compose up --build -d
 ```
 
 This will:
-- Start a SQL Server 2022 container on port 1433
+- Start a PostgreSQL 17 container on port 5432
 - Build and start the API container on port 5000
 - Create a Docker network for communication between containers
-- Set up a persistent volume for SQL Server data
+- Set up a persistent volume for PostgreSQL data
 
 ### Access the Application
 
 - **API**: http://localhost:5000
 - **Swagger UI**: http://localhost:5000/swagger
-- **SQL Server**: localhost:1433 (sa/YourStrong@Passw0rd)
+- **PostgreSQL**: localhost:5432 (postgres/postgres)
 
 ## Individual Container Usage
 
@@ -41,11 +41,11 @@ docker build -t clothesshop-api .
 
 ### Run the API Container
 
-If you have an existing SQL Server instance:
+If you have an existing PostgreSQL instance:
 
 ```bash
 docker run -p 5000:8080 \
-  -e ConnectionStrings__DefaultConnection="Server=your-sql-server;Database=ClothesShopDB;User Id=sa;Password=YourPassword;TrustServerCertificate=true" \
+  -e ConnectionStrings__DefaultConnection="Host=your-postgres-host;Port=5432;Database=ClothesShopDB;Username=postgres;Password=YourPassword;Include Error Detail=true" \
   clothesshop-api
 ```
 
@@ -67,7 +67,7 @@ Key environment variables you can customize:
 
 - `ASPNETCORE_ENVIRONMENT`: Set to `Development`, `Staging`, or `Production`
 - `ConnectionStrings__DefaultConnection`: Database connection string
-- `SA_PASSWORD`: SQL Server SA password (in docker-compose.yml)
+- `POSTGRES_PASSWORD`: PostgreSQL password (in docker-compose.yml)
 
 ## Stopping the Application
 
@@ -88,10 +88,11 @@ ports:
   - "5001:8080"  # Change 5000 to 5001 or any available port
 ```
 
-### SQL Server Connection Issues
-- Ensure SQL Server container is fully started (may take 30-60 seconds)
-- Check if port 1433 is available on your host machine
+### PostgreSQL Connection Issues
+- Ensure PostgreSQL container is fully started (may take 10-20 seconds)
+- Check if port 5432 is available on your host machine
 - Verify the connection string format and credentials
+- Check PostgreSQL logs: `docker logs clothesshop-postgres`
 
 ### Build Issues
 Make sure you're running Docker commands from the root directory (where Dockerfile is located).

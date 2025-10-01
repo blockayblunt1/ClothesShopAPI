@@ -15,14 +15,23 @@ namespace ClothesShopAPI.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Configure Product entity
+            // Configure Product entity for PostgreSQL
             modelBuilder.Entity<Product>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.Id).ValueGeneratedOnAdd(); // Ensure auto-increment
+                entity.Property(e => e.Id).ValueGeneratedOnAdd(); // PostgreSQL SERIAL auto-increment
                 entity.Property(e => e.Price).HasPrecision(18, 2);
-                entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
-                entity.Property(e => e.UpdatedAt).HasDefaultValueSql("GETUTCDATE()");
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("NOW()"); // PostgreSQL current timestamp
+                entity.Property(e => e.UpdatedAt).HasDefaultValueSql("NOW()"); // PostgreSQL current timestamp
+                
+                // PostgreSQL-specific configurations
+                entity.ToTable("products"); // Use lowercase table name (PostgreSQL convention)
+                entity.Property(e => e.Name).HasColumnName("name");
+                entity.Property(e => e.Description).HasColumnName("description");
+                entity.Property(e => e.Price).HasColumnName("price");
+                entity.Property(e => e.Image).HasColumnName("image");
+                entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+                entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
             });
 
             // Seed some initial data

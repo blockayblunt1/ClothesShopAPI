@@ -1,0 +1,22 @@
+using System.ComponentModel.DataAnnotations;
+
+namespace ClothesShopAPI.DTOs
+{
+    public class CreateProductDto
+    {
+        [Required]
+        [StringLength(100)]
+        public string Name { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(500)]
+        public string Description { get; set; } = string.Empty;
+
+        [Required]
+        [Range(0.01, 10000.00)]
+        public decimal Price { get; set; }
+
+        [StringLength(200)]
+        public string? Image { get; set; }
+    }
+}

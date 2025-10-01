@@ -1,0 +1,39 @@
+# Exclude build artifacts
+**/bin/
+**/obj/
+**/out/
+
+# Exclude IDE files
+**/.vs/
+**/.vscode/
+**/.idea/
+
+# Exclude OS files
+**/.DS_Store
+**/Thumbs.db
+
+# Exclude version control
+**/.git/
+**/.gitignore
+
+# Exclude Docker files to avoid recursion
+**/Dockerfile*
+**/docker-compose*
+
+# Exclude documentation and readme files
+**/*.md
+**/LICENSE
+
+# Exclude temporary files
+**/tmp/
+**/temp/
+
+# Exclude log files
+**/logs/
+**/*.log
+
+# Exclude package files
+**/packages/
+
+# Exclude node modules (if any frontend components)
+**/node_modules/

@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  # SQL Server Database
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: clothesshop-sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourStrong@Passw0rd
+      - MSSQL_PID=Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    networks:
+      - clothesshop-network
+    restart: unless-stopped
+
+  # ClothesShop API
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: clothesshop-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=ClothesShopDB;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=true;MultipleActiveResultSets=true
+    ports:
+      - "5000:8080"
+    depends_on:
+      - sqlserver
+    networks:
+      - clothesshop-network
+    restart: unless-stopped
+
+volumes:
+  sqlserver_data:
+
+networks:
+  clothesshop-network:
+    driver: bridge

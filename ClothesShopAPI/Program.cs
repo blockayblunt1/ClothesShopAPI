@@ -116,25 +116,37 @@ if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("STRIPE_WEBHOOK_SEC
 
 var app = builder.Build();
 
-// Ensure database is created
+// Run database migrations
 try
 {
     using var scope = app.Services.CreateScope();
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await context.Database.EnsureCreatedAsync();
+    await context.Database.MigrateAsync();
 }
 catch (Exception ex)
 {
-    Console.WriteLine($"Database initialization error: {ex.Message}");
+    Console.WriteLine($"Database migration error: {ex.Message}");
 }
 
 // Configure the HTTP request pipeline
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
+else
+{
+    app.UseExceptionHandler("/error");
+}
+
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "ECommerce API V1");
     c.RoutePrefix = "swagger";
 });
+
+// Error handling endpoint
+app.Map("/error", () => Results.Problem("An error occurred processing your request."));
 
 // Middleware pipeline
 app.UseCors("AllowFrontend");

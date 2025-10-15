@@ -14,61 +14,76 @@ namespace ClothesShopAPI.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IJwtService _jwtService;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController(ApplicationDbContext context, IJwtService jwtService)
+        public AuthController(ApplicationDbContext context, IJwtService jwtService, ILogger<AuthController> logger)
         {
             _context = context;
             _jwtService = jwtService;
+            _logger = logger;
         }
 
         [HttpPost("register")]
         public async Task<ActionResult<AuthResponseDto>> Register(RegisterDto registerDto)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                return BadRequest(ModelState);
+                _logger.LogInformation("Registration attempt for email: {Email}", registerDto.Email);
+                
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("Invalid model state for registration");
+                    return BadRequest(ModelState);
+                }
+
+                // Check if user already exists
+                if (await _context.Users.AnyAsync(u => u.Email == registerDto.Email))
+                {
+                    _logger.LogWarning("Registration failed: User with email {Email} already exists", registerDto.Email);
+                    return BadRequest("User with this email already exists");
+                }
+
+                // Hash password
+                var passwordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password);
+
+                // Create new user
+                var user = new User
+                {
+                    Email = registerDto.Email,
+                    PasswordHash = passwordHash,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+
+                // Create initial cart for user
+                var cart = new Cart
+                {
+                    UserId = user.Id,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+                _context.Carts.Add(cart);
+                await _context.SaveChangesAsync();
+
+                // Generate JWT token
+                var token = _jwtService.GenerateToken(user);
+
+                _logger.LogInformation("User registered successfully: {Email}", user.Email);
+                return Ok(new AuthResponseDto
+                {
+                    Token = token,
+                    UserId = user.Id,
+                    Email = user.Email
+                });
             }
-
-            // Check if user already exists
-            if (await _context.Users.AnyAsync(u => u.Email == registerDto.Email))
+            catch (Exception ex)
             {
-                return BadRequest("User with this email already exists");
+                _logger.LogError(ex, "Error during user registration for email: {Email}", registerDto.Email);
+                return StatusCode(500, "An error occurred during registration. Please try again.");
             }
-
-            // Hash password
-            var passwordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password);
-
-            // Create new user
-            var user = new User
-            {
-                Email = registerDto.Email,
-                PasswordHash = passwordHash,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
-
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-
-            // Create initial cart for user
-            var cart = new Cart
-            {
-                UserId = user.Id,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
-            _context.Carts.Add(cart);
-            await _context.SaveChangesAsync();
-
-            // Generate JWT token
-            var token = _jwtService.GenerateToken(user);
-
-            return Ok(new AuthResponseDto
-            {
-                Token = token,
-                UserId = user.Id,
-                Email = user.Email
-            });
         }
 
         [HttpPost("login")]

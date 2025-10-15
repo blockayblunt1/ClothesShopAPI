@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ClothesShopAPI.Data;
@@ -40,6 +41,7 @@ namespace ClothesShopAPI.Controllers
 
         // PUT: api/Product/5
         [HttpPut("{id}")]
+        [Authorize]
         public async Task<IActionResult> PutProduct(int id, UpdateProductDto updateProductDto)
         {
             var existingProduct = await _context.Products.FindAsync(id);
@@ -76,6 +78,7 @@ namespace ClothesShopAPI.Controllers
 
         // POST: api/Product
         [HttpPost]
+        [Authorize]
         public async Task<ActionResult<Product>> PostProduct(CreateProductDto createProductDto)
         {
             if (!ModelState.IsValid)
@@ -102,6 +105,7 @@ namespace ClothesShopAPI.Controllers
 
         // DELETE: api/Product/5
         [HttpDelete("{id}")]
+        [Authorize]
         public async Task<IActionResult> DeleteProduct(int id)
         {
             var product = await _context.Products.FindAsync(id);

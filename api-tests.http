@@ -1,0 +1,122 @@
+### Variables
+@baseUrl = http://localhost:80
+@token = YOUR_JWT_TOKEN_HERE
+
+### Register a new user
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+    "email": "test@example.com",
+    "password": "password123"
+}
+
+### Login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+    "email": "test@example.com",
+    "password": "password123"
+}
+
+### Get all products (public endpoint)
+GET {{baseUrl}}/api/product
+
+### Get specific product (public endpoint)
+GET {{baseUrl}}/api/product/1
+
+### Create product (authenticated only)
+POST {{baseUrl}}/api/product
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "name": "New T-Shirt",
+    "description": "A brand new t-shirt",
+    "price": 25.99,
+    "image": "https://via.placeholder.com/300x400"
+}
+
+### Update product (authenticated only)
+PUT {{baseUrl}}/api/product/1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "name": "Updated Classic White T-Shirt",
+    "description": "Updated comfortable cotton t-shirt perfect for everyday wear",
+    "price": 22.99,
+    "image": "https://via.placeholder.com/300x400/FFFFFF/000000?text=Updated+White+T-Shirt"
+}
+
+### Delete product (authenticated only)
+DELETE {{baseUrl}}/api/product/1
+Authorization: Bearer {{token}}
+
+### Get user's cart
+GET {{baseUrl}}/api/cart
+Authorization: Bearer {{token}}
+
+### Add item to cart
+POST {{baseUrl}}/api/cart/add
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "productId": 1,
+    "quantity": 2
+}
+
+### Update cart item quantity
+PUT {{baseUrl}}/api/cart/items/1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "quantity": 3
+}
+
+### Remove item from cart
+DELETE {{baseUrl}}/api/cart/items/1
+Authorization: Bearer {{token}}
+
+### Clear entire cart
+DELETE {{baseUrl}}/api/cart/clear
+Authorization: Bearer {{token}}
+
+### Get user's orders
+GET {{baseUrl}}/api/order
+Authorization: Bearer {{token}}
+
+### Place an order from cart
+POST {{baseUrl}}/api/order/place
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{}
+
+### Get specific order
+GET {{baseUrl}}/api/order/1
+Authorization: Bearer {{token}}
+
+### Simulate payment for order
+POST {{baseUrl}}/api/order/1/payment/simulate
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "orderId": 1,
+    "paymentSuccess": true
+}
+
+### Update order status
+PATCH {{baseUrl}}/api/order/1/status
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+"Shipped"
+
+### Logout (client-side token removal)
+POST {{baseUrl}}/api/auth/logout
+Authorization: Bearer {{token}}

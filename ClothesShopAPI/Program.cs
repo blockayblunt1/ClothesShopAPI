@@ -1,5 +1,9 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using ClothesShopAPI.Data;
+using ClothesShopAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +45,38 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(finalConnectionString);
 });
 
+// Add JWT service
+builder.Services.AddScoped<IJwtService, JwtService>();
+
+// Add Stripe service
+builder.Services.AddScoped<ClothesShopAPI.Services.IStripeService, ClothesShopAPI.Services.StripeService>();
+
+// Add JWT Authentication
+var jwtKey = builder.Configuration["Jwt:SecretKey"] ?? "YourVeryLongSecretKeyThatIsAtLeast32Characters!";
+var key = Encoding.ASCII.GetBytes(jwtKey);
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        ValidateIssuer = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "ClothesShopAPI",
+        ValidateAudience = true,
+        ValidAudience = builder.Configuration["Jwt:Audience"] ?? "ClothesShopAPI",
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero
+    };
+});
+
 // Add CORS
 builder.Services.AddCors(options =>
 {
@@ -63,6 +99,20 @@ builder.Services.AddCors(options =>
             .AllowCredentials();
         });
 });
+
+// Override appsettings with environment variables for Stripe if they exist
+if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY")))
+{
+    builder.Configuration["Stripe:SecretKey"] = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY");
+}
+if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("STRIPE_PUBLISHABLE_KEY")))
+{
+    builder.Configuration["Stripe:PublishableKey"] = Environment.GetEnvironmentVariable("STRIPE_PUBLISHABLE_KEY");
+}
+if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("STRIPE_WEBHOOK_SECRET")))
+{
+    builder.Configuration["Stripe:WebhookSecret"] = Environment.GetEnvironmentVariable("STRIPE_WEBHOOK_SECRET");
+}
 
 var app = builder.Build();
 
@@ -88,12 +138,16 @@ app.UseSwaggerUI(c =>
 
 // Middleware pipeline
 app.UseCors("AllowFrontend");
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-// Configure port
-var port = Environment.GetEnvironmentVariable("PORT") ?? "80";
-var urls = $"http://0.0.0.0:{port}";
-app.Urls.Add(urls);
+// Configure port (only if PORT environment variable is set for deployment)
+var port = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrEmpty(port))
+{
+    var urls = $"http://0.0.0.0:{port}";
+    app.Urls.Add(urls);
+}
 
 app.Run();

@@ -137,14 +137,28 @@ try
 {
     using var scope = app.Services.CreateScope();
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
     
     Console.WriteLine("Starting database migration...");
-    await context.Database.MigrateAsync();
-    Console.WriteLine("Database migration completed successfully.");
+    logger.LogInformation("Starting database migration...");
     
-    // Test database connection
+    // Ensure database exists and run migrations
+    await context.Database.MigrateAsync();
+    
+    Console.WriteLine("Database migration completed successfully.");
+    logger.LogInformation("Database migration completed successfully.");
+    
+    // Test database connection and verify tables
     var canConnect = await context.Database.CanConnectAsync();
     Console.WriteLine($"Database connection test: {(canConnect ? "SUCCESS" : "FAILED")}");
+    
+    if (canConnect)
+    {
+        // Verify users table exists by querying it
+        var userCount = await context.Users.CountAsync();
+        Console.WriteLine($"Users table verified. Current user count: {userCount}");
+        logger.LogInformation("Users table verified. Current user count: {UserCount}", userCount);
+    }
 }
 catch (Exception ex)
 {
@@ -153,7 +167,7 @@ catch (Exception ex)
     
     // Don't throw - let the app start but log the error
     var logger = app.Services.GetService<ILogger<Program>>();
-    logger?.LogError(ex, "Failed to run database migrations");
+    logger?.LogError(ex, "Failed to run database migrations: {ErrorMessage}", ex.Message);
 }
 
 // Configure the HTTP request pipeline
@@ -175,6 +189,52 @@ app.UseSwaggerUI(c =>
 
 // Health check endpoint
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
+
+// Database initialization endpoint (for manual trigger)
+app.MapPost("/init-db", async (IServiceProvider services) =>
+{
+    try
+    {
+        using var scope = services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        
+        logger.LogInformation("Manual database initialization started");
+        
+        // Check if we can connect
+        var canConnect = await context.Database.CanConnectAsync();
+        if (!canConnect)
+        {
+            return Results.BadRequest(new { error = "Cannot connect to database" });
+        }
+        
+        // Run migrations
+        await context.Database.MigrateAsync();
+        
+        // Verify tables exist by checking if we can query users
+        var userCount = await context.Users.CountAsync();
+        
+        logger.LogInformation("Database initialization completed successfully. User count: {UserCount}", userCount);
+        
+        return Results.Ok(new { 
+            status = "success", 
+            message = "Database initialized successfully",
+            userCount = userCount,
+            timestamp = DateTime.UtcNow 
+        });
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetService<ILogger<Program>>();
+        logger?.LogError(ex, "Database initialization failed");
+        
+        return Results.BadRequest(new { 
+            error = "Database initialization failed", 
+            message = ex.Message,
+            timestamp = DateTime.UtcNow 
+        });
+    }
+});
 
 // Error handling endpoint
 app.Map("/error", () => Results.Problem("An error occurred processing your request."));

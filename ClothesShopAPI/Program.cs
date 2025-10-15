@@ -16,6 +16,9 @@ builder.Services.AddSwaggerGen();
 var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL")
     ?? builder.Configuration.GetConnectionString("DefaultConnection");
 
+Console.WriteLine($"Database connection source: {(Environment.GetEnvironmentVariable("DATABASE_URL") != null ? "Environment Variable" : "Configuration")}");
+Console.WriteLine($"Connection string present: {!string.IsNullOrEmpty(connectionString)}");
+
 if (string.IsNullOrEmpty(connectionString))
 {
     throw new InvalidOperationException("No database connection string found.");
@@ -32,7 +35,7 @@ try
     var host = uri.Host;
     var database = uri.AbsolutePath.TrimStart('/');
 
-    finalConnectionString = $"Host={host};Database={database};Username={username};Password={password};SSL Mode=Prefer;Trust Server Certificate=true";
+    finalConnectionString = $"Host={host};Database={database};Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true;Command Timeout=30;Timeout=30;";
 }
 catch (Exception)
 {
@@ -42,7 +45,20 @@ catch (Exception)
 // Add Entity Framework
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
-    options.UseNpgsql(finalConnectionString);
+    options.UseNpgsql(finalConnectionString, npgsqlOptions =>
+    {
+        npgsqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 3,
+            maxRetryDelay: TimeSpan.FromSeconds(5),
+            errorCodesToAdd: null);
+        npgsqlOptions.CommandTimeout(30);
+    });
+    
+    if (builder.Environment.IsDevelopment())
+    {
+        options.EnableSensitiveDataLogging();
+        options.EnableDetailedErrors();
+    }
 });
 
 // Add JWT service
@@ -121,11 +137,23 @@ try
 {
     using var scope = app.Services.CreateScope();
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    
+    Console.WriteLine("Starting database migration...");
     await context.Database.MigrateAsync();
+    Console.WriteLine("Database migration completed successfully.");
+    
+    // Test database connection
+    var canConnect = await context.Database.CanConnectAsync();
+    Console.WriteLine($"Database connection test: {(canConnect ? "SUCCESS" : "FAILED")}");
 }
 catch (Exception ex)
 {
     Console.WriteLine($"Database migration error: {ex.Message}");
+    Console.WriteLine($"Stack trace: {ex.StackTrace}");
+    
+    // Don't throw - let the app start but log the error
+    var logger = app.Services.GetService<ILogger<Program>>();
+    logger?.LogError(ex, "Failed to run database migrations");
 }
 
 // Configure the HTTP request pipeline
@@ -144,6 +172,9 @@ app.UseSwaggerUI(c =>
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "ECommerce API V1");
     c.RoutePrefix = "swagger";
 });
+
+// Health check endpoint
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
 
 // Error handling endpoint
 app.Map("/error", () => Results.Problem("An error occurred processing your request."));

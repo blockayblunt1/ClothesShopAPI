@@ -132,6 +132,11 @@ if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("STRIPE_WEBHOOK_SEC
 
 var app = builder.Build();
 
+// Add startup logging
+var startupLogger = app.Services.GetRequiredService<ILogger<Program>>();
+startupLogger.LogInformation("Application starting up...");
+Console.WriteLine("Application starting up...");
+
 // Run database migrations
 try
 {
@@ -244,6 +249,12 @@ app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.Migrate();
+}
 
 // Configure port (only if PORT environment variable is set for deployment)
 var port = Environment.GetEnvironmentVariable("PORT");

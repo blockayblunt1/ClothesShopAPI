@@ -27,8 +27,8 @@
       "RelativeMoniker": "D:0:0:{CD76CC1E-F352-4432-A574-1A623303C223}|ClothesShopAPI\\ClothesShopAPI.csproj|solutionrelative:clothesshopapi\\models\\product.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{CD76CC1E-F352-4432-A574-1A623303C223}|ClothesShopAPI\\ClothesShopAPI.csproj|e:\\programming\\clothesshopapi\\clothesshopapi\\migrations\\20250922085108_22.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{CD76CC1E-F352-4432-A574-1A623303C223}|ClothesShopAPI\\ClothesShopAPI.csproj|solutionrelative:clothesshopapi\\migrations\\20250922085108_22.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|E:\\Programming\\ClothesShopAPI\\ClothesShopAPI\\Migrations\\20250922085108_22.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:ClothesShopAPI\\Migrations\\20250922085108_22.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -48,7 +48,7 @@
               "RelativeDocumentMoniker": "ClothesShopAPI\\Program.cs",
               "ToolTip": "E:\\Programming\\ClothesShopAPI\\ClothesShopAPI\\Program.cs",
               "RelativeToolTip": "ClothesShopAPI\\Program.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAO4AAAAAAAAAAAAWwP8AAAAaAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-09-22T09:26:19.591Z",
               "EditorCaption": ""

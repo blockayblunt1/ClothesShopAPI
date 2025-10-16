@@ -12,15 +12,15 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ClothesShopAPI.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251015135342_AddAuthCartOrder")]
-    partial class AddAuthCartOrder
+    [Migration("20251016024322_DbFix")]
+    partial class DbFix
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.8")
+                .HasAnnotation("ProductVersion", "8.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -104,6 +104,12 @@ namespace ClothesShopAPI.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("StripeClientSecret")
+                        .HasColumnType("text");
+
+                    b.Property<string>("StripePaymentIntentId")
                         .HasColumnType("text");
 
                     b.Property<decimal>("TotalAmount")
